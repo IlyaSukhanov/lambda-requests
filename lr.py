@@ -3,6 +3,7 @@ import json
 import os
 import logging
 from io import BytesIO
+from urllib.parse import urlparse
 
 import boto3
 import requests
@@ -59,7 +60,7 @@ class LambdaAdapter(BaseAdapter):
         return response
 
     def send(self, request, **kwargs):
-        function_name = 'flaskexp-test'
+        function_name = urlparse(request.url).hostname
         invocation_type = 'RequestResponse'
         log_type = 'Tail'
         payload = json.dumps(self._lambda_encode_request(request))
@@ -84,8 +85,8 @@ if __name__ == "__main__":
     s = requests.Session()
     s.mount('lambda://', LambdaAdapter())
 
-    if False:
-        resp = s.get('lambda://foo/test/foo')
+    if True:
+        resp = s.get('lambda://flaskexp-test/test/foo')
         print("code: {}".format(resp.status_code))
         print("headers: {}".format(resp.headers))
         #print("body: {}".format(resp.body))
@@ -93,12 +94,12 @@ if __name__ == "__main__":
         #print(type(resp.body))
         print(resp.json())
 
-    
+
     from tempfile import mkstemp
     #files = {'file': open('hypnotoad.svg', 'rb')}
     files = {'file': open('bender.png', 'rb')}
-    if False:
-        file_resp = s.post('lambda://foo/file', files=files)
+    if True:
+        file_resp = s.post('lambda://flaskexp-test/file', files=files)
         print("code: {}".format(file_resp.status_code))
         print("headers: {}".format(file_resp.headers))
         tempfile_descriptor, tempfile_name = mkstemp()
