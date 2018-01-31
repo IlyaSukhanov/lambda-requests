@@ -21,43 +21,34 @@ class LambdaAdapter(BaseAdapter):
     def __init__(self):
         super(LambdaAdapter, self).__init__()
 
-    def send(self, request, **kwargs):
-        print(kwargs)
-        function_name = 'flaskexp-test'
-        invocation_type = 'RequestResponse'
-        log_type = 'Tail'
-        path_parameters = ''
-        qs_parameters = ''
-        print(request.path_url)
-        print(dict(request.headers))
-        print(request.headers.items())
-        # http://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
-        print("request.body")
-        print(request.body)
-        payload = {
+    def _lambda_encode_request(self, request):
+        """
+        Convert a requests object to object mimicking API gateway
+        simple proxy json object that can be handled by lambda
+        http://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
+        """
+        try:
+            body = request.body.decode('utf-8') if request.body else None
+            base64_encoded = False
+        except UnicodeDecodeError:
+            body = base64.b64encode(request.body).decode('utf-8') if request.body else None
+            base64_encoded = True
+        return {
             "httpMethod": request.method,
             "path": request.path_url,
-            "pathParameters": path_parameters,
-            "queryStringParameters": qs_parameters,
+            "pathParameters": '',
+            "queryStringParameters": '',
             "headers": dict(request.headers),
-            "body": base64.b64encode(request.body).decode('utf-8') if request.body else None,
-            "isBase64Encoded": True,
-            #"body": request.body.decode('utf-8') if request.body else None,
+            "body": body,
+            "isBase64Encoded": base64_encoded,
             "requestContext": {},
         }
-        print("payload")
-        print(payload)
 
-        client = boto3.client('lambda', region_name=REGION)
-        lambda_response_raw = client.invoke(
-            FunctionName=function_name,
-            InvocationType=invocation_type,
-            LogType=log_type,
-            Payload=json.dumps(payload)
-        )
-        lambda_response = json.loads(lambda_response_raw['Payload'].read().decode())
-        logger.debug("Payload: %s", payload)
-        #print(lambda_response)
+    def _lambda_decode_reponse(self, lambda_response):
+        """
+        Convert json blob returned by lambda into one that requests
+        clients are used to.
+        """
         response = Response()
         response.status_code = lambda_response['statusCode']
         response.headers = lambda_response.get('headers', {})
@@ -66,6 +57,27 @@ class LambdaAdapter(BaseAdapter):
         else:
             response.raw = BytesIO(lambda_response['body'].encode('utf-8'))
         return response
+
+    def send(self, request, **kwargs):
+        function_name = 'flaskexp-test'
+        invocation_type = 'RequestResponse'
+        log_type = 'Tail'
+        payload = json.dumps(self._lambda_encode_request(request))
+        logger.debug("Payload: %s", payload)
+
+        client = boto3.client('lambda', region_name=REGION)
+        lambda_response_raw = client.invoke(
+            FunctionName=function_name,
+            InvocationType=invocation_type,
+            LogType=log_type,
+            Payload=payload,
+        )
+
+        # Unlike requests we read in whole object into memory as we need to
+        # inspect some json fields, maybe there is a clever library that allows
+        # this inspection without reading whole object
+        lambda_response = json.loads(lambda_response_raw['Payload'].read().decode())
+        return self._lambda_decode_reponse(lambda_response)
 
 
 if __name__ == "__main__":
@@ -97,7 +109,7 @@ if __name__ == "__main__":
         print("returned file be found in: {}".format(tempfile_name))
 
 
-    if True:
+    if False:
         file_resp = requests.post('https://qrq3869e2e.execute-api.us-west-2.amazonaws.com/test/file', files=files)
         print("code: {}".format(file_resp.status_code))
         print("headers: {}".format(file_resp.headers))
