@@ -6,18 +6,19 @@ from io import BytesIO
 from urllib.parse import urlparse, parse_qs
 
 import boto3
-import requests
 from requests.adapters import BaseAdapter
 from requests.adapters import Response
 
 logger = logging.getLogger(__name__)
 
+
 def _lambda_query_string(url):
     return {
-        key:value[0]
+        key: value[0]
         for key, value
         in parse_qs(urlparse(url).query).items()
     }
+
 
 class LambdaAdapter(BaseAdapter):
     def __init__(self, region=None):

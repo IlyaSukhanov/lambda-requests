@@ -1,11 +1,9 @@
-import os
 from io import (
     BytesIO,
     StringIO,
 )
 
 from unittest import TestCase
-from unittest.mock import patch
 import requests
 
 from lambda_requests import LambdaAdapter
@@ -28,7 +26,7 @@ class TestLambdaIntegration(TestCase):
     def setUp(self):
         self.http_accessor = requests.Session()
         self.lambda_accessor = requests.Session()
-        self.lambda_accessor.mount('httplambda://', LambdaAdapter())
+        self.lambda_accessor.mount("httplambda://", LambdaAdapter())
 
     def post_both(self, url_path, *args, **kwargs):
         return (
@@ -48,7 +46,7 @@ class TestLambdaIntegration(TestCase):
         ensure we get same status code and content back.
         """
         with BytesIO(BINARY_PAYLOAD) as test_buffer:
-            kwargs={"files":{'file': test_buffer}}
+            kwargs = {"files": {"file": test_buffer}}
             responses = self.post_both("file", **kwargs)
             assert responses[0].status_code == responses[1].status_code
             assert responses[0].content == responses[1].content
@@ -59,7 +57,7 @@ class TestLambdaIntegration(TestCase):
         ensure we get same status code and content back.
         """
         with StringIO(UNICODE_PAYLOAD) as test_buffer:
-            kwargs={"files":{'file': test_buffer}}
+            kwargs = {"files": {"file": test_buffer}}
             responses = self.post_both("file", **kwargs)
             assert responses[0].status_code == responses[1].status_code == 200
             assert responses[0].content == responses[1].content
@@ -70,23 +68,23 @@ class TestLambdaIntegration(TestCase):
         assert responses[0].json()["param"] == responses[1].json()["param"]
 
     def test_form_object(self):
-        form_data = {"foo":"bar"}
+        form_data = {"foo": "bar"}
         responses = self.post_both("/test/form", data=form_data)
 
         assert responses[0].status_code == responses[1].status_code == 200
         assert responses[0].json()["form"] == responses[1].json()["form"]
 
     def test_query_string(self):
-        param_data = {"foo":"bar"}
+        param_data = {"foo": "bar"}
         responses = self.get_both("/test/form", params=param_data)
 
         assert responses[0].status_code == responses[1].status_code == 200
         assert responses[0].json()["query_strings"] == responses[1].json()["query_strings"]
 
-    #def test_custom_header(self):
-    #def test_get
-    #def test_head
-    #def test_post
-    #def test_patch
-    #def test_post
-    #def test_delete
+    # def test_custom_header(self):
+    # def test_get
+    # def test_head
+    # def test_post
+    # def test_patch
+    # def test_post
+    # def test_delete
