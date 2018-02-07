@@ -3,7 +3,7 @@ import json
 import os
 import logging
 from io import BytesIO
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 import boto3
 import requests
@@ -11,6 +11,13 @@ from requests.adapters import BaseAdapter
 from requests.adapters import Response
 
 logger = logging.getLogger(__name__)
+
+def _lambda_query_string(url):
+    return {
+        key:value[0]
+        for key, value
+        in parse_qs(urlparse(url).query).items()
+    }
 
 class LambdaAdapter(BaseAdapter):
     def __init__(self, region=None):
@@ -24,7 +31,12 @@ class LambdaAdapter(BaseAdapter):
         http://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
         """
         try:
-            body = request.body.decode('utf-8') if request.body else None
+            if not request.body:
+                body = None
+            elif isinstance(request.body, str):
+                body = request.body
+            else:
+                body = request.body.decode('utf-8')
             base64_encoded = False
         except UnicodeDecodeError:
             body = base64.b64encode(request.body).decode('utf-8') if request.body else None
@@ -33,7 +45,7 @@ class LambdaAdapter(BaseAdapter):
             "httpMethod": request.method,
             "path": request.path_url,
             "pathParameters": '',
-            "queryStringParameters": '',
+            "queryStringParameters": _lambda_query_string(request.url),
             "headers": dict(request.headers),
             "body": body,
             "isBase64Encoded": base64_encoded,
@@ -59,15 +71,16 @@ class LambdaAdapter(BaseAdapter):
         function_name = urlparse(request.url).hostname
         invocation_type = 'RequestResponse'
         log_type = 'Tail'
-        payload = json.dumps(self._lambda_encode_request(request))
-        logger.debug("Payload: %s", payload)
+        raw_payload = self._lambda_encode_request(request)
+        json_payload = json.dumps(raw_payload)
+        logger.debug("Payload: %s", json_payload)
 
         client = boto3.client('lambda', region_name=self.region)
         lambda_response_raw = client.invoke(
             FunctionName=function_name,
             InvocationType=invocation_type,
             LogType=log_type,
-            Payload=payload,
+            Payload=json_payload,
         )
 
         # Unlike requests we read in whole object into memory as we need to
@@ -75,17 +88,3 @@ class LambdaAdapter(BaseAdapter):
         # this inspection without reading whole object
         lambda_response = json.loads(lambda_response_raw['Payload'].read().decode())
         return self._lambda_decode_reponse(lambda_response)
-
-
-if __name__ == "__main__":
-    s = requests.Session()
-    s.mount('lambda://', LambdaAdapter())
-
-    if True:
-        resp = s.get('lambda://flaskexp-test/test/foo')
-        print("code: {}".format(resp.status_code))
-        print("headers: {}".format(resp.headers))
-        #print("body: {}".format(resp.body))
-        #print("body: {}".format(hex_escape(resp.body)))
-        #print(type(resp.body))
-        print(resp.json())
