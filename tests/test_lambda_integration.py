@@ -81,7 +81,16 @@ class TestLambdaIntegration(TestCase):
         assert responses[0].status_code == responses[1].status_code == 200
         assert responses[0].json()["query_strings"] == responses[1].json()["query_strings"]
 
-    # def test_custom_header(self):
+    def test_custom_header(self):
+        header_data = {"foo": "bar"}
+        responses = self.get_both("/test/form", headers=header_data)
+
+        assert responses[0].status_code == responses[1].status_code == 200
+        assert responses[0].json()["headers"].lower().find("foo") > 0
+        assert responses[0].json()["headers"].lower().find("bar") > 0
+        assert responses[1].json()["headers"].lower().find("foo") > 0
+        assert responses[1].json()["headers"].lower().find("bar") > 0
+
     # def test_get
     # def test_head
     # def test_post
