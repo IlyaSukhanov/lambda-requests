@@ -44,7 +44,7 @@ class LambdaAdapter(BaseAdapter):
             base64_encoded = True
         return {
             "httpMethod": request.method,
-            "path": request.path_url,
+            "path": urlparse(request.path_url).path,
             "pathParameters": '',
             "queryStringParameters": _lambda_query_string(request.url),
             "headers": dict(request.headers),
