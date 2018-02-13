@@ -8,7 +8,7 @@ import requests
 
 from lambda_requests import LambdaAdapter
 
-LAMBDA_URL_PREFIX = "httplambda://flaskexp-test/"
+LAMBDA_URL_PREFIX = "httplambda://flaskexp-test"
 HTTP_URL_PREFIX = "https://qrq3869e2e.execute-api.us-west-2.amazonaws.com/test/"
 BINARY_PAYLOAD = bytes([0xde, 0xad, 0xbe, 0xef] * 100)
 UNICODE_PAYLOAD = u"\u2620\U0001F42E" * 100
@@ -47,7 +47,7 @@ class TestLambdaIntegration(TestCase):
         """
         with BytesIO(BINARY_PAYLOAD) as test_buffer:
             kwargs = {"files": {"file": test_buffer}}
-            responses = self.post_both("file", **kwargs)
+            responses = self.post_both("/file", **kwargs)
             assert responses[0].status_code == responses[1].status_code
             assert responses[0].content == responses[1].content
 
@@ -58,12 +58,14 @@ class TestLambdaIntegration(TestCase):
         """
         with StringIO(UNICODE_PAYLOAD) as test_buffer:
             kwargs = {"files": {"file": test_buffer}}
-            responses = self.post_both("file", **kwargs)
+            responses = self.post_both("/file", **kwargs)
             assert responses[0].status_code == responses[1].status_code == 200
             assert responses[0].content == responses[1].content
 
     def test_path_parameter(self):
-        responses = self.post_both("/test/foo")
+        responses = self.get_both("/test/foo")
+        print(responses[0].status_code)
+        print(responses[1].status_code)
         assert responses[0].status_code == responses[1].status_code == 200
         assert responses[0].json()["param"] == responses[1].json()["param"]
 
