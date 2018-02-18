@@ -20,7 +20,7 @@ except IOError:
 
 setup(
     name='lambda_requests',
-    version='0.1.0',
+    version='0.1.1',
     description="Use Requests to invoke AWS Lambdas",
     author="Ilya Sukhanov",
     author_email='ilya@sukhanov.net',
@@ -44,6 +44,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
     test_suite='tests',
     tests_require=test_requirements
