@@ -24,7 +24,7 @@ setup(
     description="Use Requests to invoke AWS Lambdas",
     author="Ilya Sukhanov",
     author_email='ilya@sukhanov.net',
-    url='https://github.com/IlyaSukhanov/lambda_requests',
+    url='https://github.com/IlyaSukhanov/lambda-requests',
     packages=[
         'lambda_requests',
     ],
