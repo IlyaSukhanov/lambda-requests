@@ -59,13 +59,23 @@ class LambdaAdapter(BaseAdapter):
         clients are used to.
         """
         response = Response()
-        response.status_code = lambda_response['statusCode']
+        response.status_code = lambda_response.get('statusCode', 502)
         response.headers = lambda_response.get('headers', {})
         if "body" in lambda_response:
             if lambda_response.get('isBase64Encoded', False):
                 response.raw = BytesIO(base64.b64decode(lambda_response['body']))
             else:
                 response.raw = BytesIO(lambda_response['body'].encode('utf-8'))
+        elif "errorMessage" in lambda_response:
+            # {
+            #     'errorMessage': "Unable to import module 'service': No module named 'foobarbaz'",
+            #     'errorType': 'Runtime.ImportModuleError',
+            #     'stackTrace': []
+            # }
+            if lambda_response.get('isBase64Encoded', False):
+                response.raw = BytesIO(base64.b64decode(lambda_response['errorMessage']))
+            else:
+                response.raw = BytesIO(lambda_response["errorMessage"].encode('utf-8'))
         return response
 
     def send(self, request, **kwargs):
