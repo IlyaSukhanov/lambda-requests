@@ -19,6 +19,12 @@ def _lambda_query_string(url):
         in parse_qs(urlparse(url).query).items()
     }
 
+def decode_payload(lambda_response, field):
+    if lambda_response.get('isBase64Encoded', False):
+        return BytesIO(base64.b64decode(lambda_response[field]))
+    else:
+        return BytesIO(lambda_response[field].encode('utf-8'))
+
 
 class LambdaAdapter(BaseAdapter):
     def __init__(self, region=None):
@@ -62,20 +68,9 @@ class LambdaAdapter(BaseAdapter):
         response.status_code = lambda_response.get('statusCode', 502)
         response.headers = lambda_response.get('headers', {})
         if "body" in lambda_response:
-            if lambda_response.get('isBase64Encoded', False):
-                response.raw = BytesIO(base64.b64decode(lambda_response['body']))
-            else:
-                response.raw = BytesIO(lambda_response['body'].encode('utf-8'))
+                response.raw = decode_payload(lambda_response, "body")
         elif "errorMessage" in lambda_response:
-            # {
-            #     'errorMessage': "Unable to import module 'service': No module named 'foobarbaz'",
-            #     'errorType': 'Runtime.ImportModuleError',
-            #     'stackTrace': []
-            # }
-            if lambda_response.get('isBase64Encoded', False):
-                response.raw = BytesIO(base64.b64decode(lambda_response['errorMessage']))
-            else:
-                response.raw = BytesIO(lambda_response["errorMessage"].encode('utf-8'))
+                response.raw = decode_payload(lambda_response, "errorMessage")
         return response
 
     def send(self, request, **kwargs):
@@ -97,5 +92,6 @@ class LambdaAdapter(BaseAdapter):
         # Unlike requests we read in whole object into memory as we need to
         # inspect some JSON fields, maybe there is a clever library that allows
         # this inspection without reading whole object
-        lambda_response = json.loads(lambda_response_raw['Payload'].read().decode())
+        data = lambda_response_raw['Payload'].read()
+        lambda_response = json.loads(data.decode())
         return self._lambda_decode_reponse(lambda_response)

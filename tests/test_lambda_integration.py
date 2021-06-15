@@ -3,15 +3,12 @@ from io import (
     StringIO,
 )
 
-from unittest import TestCase
 import requests
 
 from lambda_requests import LambdaAdapter
 
-LAMBDA_URL_PREFIX = "httplambda://flaskexp-test"
-HTTP_URL_PREFIX = "https://qrq3869e2e.execute-api.us-west-2.amazonaws.com/test/"
-BINARY_PAYLOAD = bytes([0xde, 0xad, 0xbe, 0xef] * 100)
-UNICODE_PAYLOAD = u"\u2620\U0001F42E" * 100
+from tests.base import PatcherBase
+from tests.base import LAMBDA_URL_PREFIX, HTTP_URL_PREFIX, BINARY_PAYLOAD, UNICODE_PAYLOAD
 
 
 def _seek_reset_request(accessor, url_path, *args, **kwargs):
@@ -21,12 +18,12 @@ def _seek_reset_request(accessor, url_path, *args, **kwargs):
     return accessor(url_path, *args, **kwargs)
 
 
-class TestLambdaIntegration(TestCase):
+class TestLambdaIntegration(PatcherBase):
 
     def setUp(self):
         self.http_accessor = requests.Session()
         self.lambda_accessor = requests.Session()
-        self.lambda_accessor.mount("httplambda://", LambdaAdapter())
+        self.lambda_accessor.mount("httplambda://", LambdaAdapter(region='us-west-2'))
 
     def post_both(self, url_path, *args, **kwargs):
         return (

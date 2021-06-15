@@ -50,10 +50,13 @@ lint: ## check style with flake8
 	flake8 lambda_requests tests
 
 test: ## run tests quickly with the default Python
+	py.test tests --ignore tests/test_lambda_integration.py --cov=lambda_requests --cov-fail-under=100
+
+test-all: isort black lint test-security test
+
+integration-test: ## run tests quickly with the default Python
 	py.test tests --cov=lambda_requests --cov-fail-under=100
 
-test-all: ## run tests on every Python version with tox
-	tox
 
 coverage: ## check code coverage quickly with the default Python
 	coverage run --source lambda_requests -m pytest
