@@ -6,13 +6,6 @@ Lambda-Requests
 .. image:: https://img.shields.io/pypi/v/lambda_requests.svg
         :target: https://pypi.python.org/pypi/lambda_requests
 
-.. image:: https://img.shields.io/travis/IlyaSukhanov/lambda_requests.svg
-        :target: https://travis-ci.org/IlyaSukhanov/lambda_requests
-
-.. image:: https://pyup.io/repos/github/IlyaSukhanov/lambda_requests/shield.svg
-     :target: https://pyup.io/repos/github/IlyaSukhanov/lambda_requests/
-     :alt: Updates
-
 
 Lambda-requests use the well familiar requests library to access your HTTP
 enabled AWS Lambda functions.
@@ -24,7 +17,7 @@ Quick start:
     >>> import requests
     >>> from lambda_requests import LambdaAdapter
     >>> la = requests.Session()
-    >>> la.mount("httplambda://", LambdaAdapter('us-west-2'))
+    >>> la.mount("httplambda://", LambdaAdapter())
     >>> la.get("httplambda://flaskexp-test/test/foo")
     <Response [200]>
 
@@ -34,17 +27,38 @@ using url of this format `httplambda://{name-of-lambda-function}/...` then use
 
 Lambda authorization is configured via `boto3`_, and can be set up using
 `environment variables`_ or a `configuration file`_. Configuration file is
-recommended.
+recommended. Example credential file ~/.aws/credentials:
+
+.. code-block:: ini
+
+    [default]
+    aws_access_key_id =  XXXXXXXXXXXXXXXXXXXX
+    aws_secret_access_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Similar to authorization, region can be configured either via the `environment
+variable`_ `AWS_DEFAULT_REGION`, `configuration file`_. Region can also be set
+on initialization of LambdaAdapter(region:'us-west-2'). Example configuration
+file ~/.aws/config:
+
+.. code-block:: ini
+
+    [profile default]
+    region = us-west-2
 
 The lambdas must support `proxy integration`_, which is used commonly by frameworks
-such as `Zappa`_.
+such as `Zappa`_, `Mangum`_.
+
+
 
 .. _`boto3`: https://boto3.readthedocs.io/en/latest/
 .. _`requests`: http://docs.python-requests.org/en/master/
 .. _`proxy integration`: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
-.. _`Zappa`: https://github.com/Miserlou/Zappa
+.. _`Zappa`: https://github.com/zappa/Zappa
+.. _`Mangum`: https://mangum.io/
 .. _`environment variables`: http://boto3.readthedocs.io/en/latest/guide/configuration.html#environment-variables
 .. _`configuration file`: http://boto3.readthedocs.io/en/latest/guide/configuration.html#shared-credentials-file
+.. _`environment variable`: http://boto3.readthedocs.io/en/latest/guide/configuration.html#environment-variable-configuration
+.. _`configuration file option`: http://boto3.readthedocs.io/en/latest/guide/configuration.html#configuration-file
 
 Why
 ---
