@@ -1,34 +1,30 @@
 import base64
 import json
-import os
 import logging
+import os
 from io import BytesIO
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 import boto3
-from requests.adapters import BaseAdapter
-from requests.adapters import Response
+from requests.adapters import BaseAdapter, Response
 
 logger = logging.getLogger(__name__)
 
 
 def _lambda_query_string(url):
-    return {
-        key: value[0]
-        for key, value
-        in parse_qs(urlparse(url).query).items()
-    }
+    return {key: value[0] for key, value in parse_qs(urlparse(url).query).items()}
+
 
 def decode_payload(lambda_response, field):
-    if lambda_response.get('isBase64Encoded', False):
+    if lambda_response.get("isBase64Encoded", False):
         return BytesIO(base64.b64decode(lambda_response[field]))
     else:
-        return BytesIO(lambda_response[field].encode('utf-8'))
+        return BytesIO(lambda_response[field].encode("utf-8"))
 
 
 class LambdaAdapter(BaseAdapter):
     def __init__(self, region=None):
-        self.region = region or os.environ.get('AWS_DEFAULT_REGION', 'us-east-1')
+        self.region = region or os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
         super(LambdaAdapter, self).__init__()
 
     def _lambda_encode_request(self, request):
@@ -43,15 +39,17 @@ class LambdaAdapter(BaseAdapter):
             elif isinstance(request.body, str):
                 body = request.body
             else:
-                body = request.body.decode('utf-8')
+                body = request.body.decode("utf-8")
             base64_encoded = False
         except UnicodeDecodeError:
-            body = base64.b64encode(request.body).decode('utf-8') if request.body else None
+            body = (
+                base64.b64encode(request.body).decode("utf-8") if request.body else None
+            )
             base64_encoded = True
         return {
             "httpMethod": request.method,
             "path": urlparse(request.path_url).path,
-            "pathParameters": '',
+            "pathParameters": "",
             "queryStringParameters": _lambda_query_string(request.url),
             "headers": dict(request.headers),
             "body": body,
@@ -65,23 +63,23 @@ class LambdaAdapter(BaseAdapter):
         clients are used to.
         """
         response = Response()
-        response.status_code = lambda_response.get('statusCode', 502)
-        response.headers = lambda_response.get('headers', {})
+        response.status_code = lambda_response.get("statusCode", 502)
+        response.headers = lambda_response.get("headers", {})
         if "body" in lambda_response:
-                response.raw = decode_payload(lambda_response, "body")
+            response.raw = decode_payload(lambda_response, "body")
         elif "errorMessage" in lambda_response:
-                response.raw = decode_payload(lambda_response, "errorMessage")
+            response.raw = decode_payload(lambda_response, "errorMessage")
         return response
 
     def send(self, request, **kwargs):
         function_name = urlparse(request.url).hostname
-        invocation_type = 'RequestResponse'
-        log_type = 'Tail'
+        invocation_type = "RequestResponse"
+        log_type = "Tail"
         raw_payload = self._lambda_encode_request(request)
         json_payload = json.dumps(raw_payload)
         logger.debug("Payload: %s", json_payload)
 
-        client = boto3.client('lambda', region_name=self.region)
+        client = boto3.client("lambda", region_name=self.region)
         lambda_response_raw = client.invoke(
             FunctionName=function_name,
             InvocationType=invocation_type,
@@ -92,6 +90,6 @@ class LambdaAdapter(BaseAdapter):
         # Unlike requests we read in whole object into memory as we need to
         # inspect some JSON fields, maybe there is a clever library that allows
         # this inspection without reading whole object
-        data = lambda_response_raw['Payload'].read()
+        data = lambda_response_raw["Payload"].read()
         lambda_response = json.loads(data.decode())
         return self._lambda_decode_reponse(lambda_response)
