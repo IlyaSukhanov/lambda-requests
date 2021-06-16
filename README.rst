@@ -10,7 +10,18 @@ Lambda-Requests
 Lambda-requests use the well familiar requests library to access your HTTP
 enabled AWS Lambda functions.
 
-Quick start:
+Quick start
+------------
+
+Installation
+````````````
+
+.. code-block:: shell
+
+    pip intall lambda_requests
+
+Usage
+`````
 
 .. code-block:: python
 
