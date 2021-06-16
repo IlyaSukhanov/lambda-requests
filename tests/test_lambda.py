@@ -1,3 +1,5 @@
+import base64
+import json
 from io import BytesIO, StringIO
 
 import requests
@@ -18,6 +20,9 @@ class TestLambda(PatcherBase):
         self.lambda_accessor.mount("httplambda://", LambdaAdapter())
         self.boto3 = self.add_patcher("lambda_requests.lambda_request.boto3")
 
+    def extract_sent_payload(self, key):
+        return json.loads(self.boto3.client().invoke.call_args[1]["Payload"])[key]
+
     def post(self, url_path, *args, **kwargs):
         return self.lambda_accessor.post(LAMBDA_URL_PREFIX + url_path, *args, **kwargs)
 
@@ -35,6 +40,9 @@ class TestLambda(PatcherBase):
         with BytesIO(BINARY_PAYLOAD) as test_buffer:
             kwargs = {"files": {"file": test_buffer}}
             response = self.post("/file", **kwargs)
+            assert self.extract_sent_payload("path") == "/file"
+            assert self.extract_sent_payload("httpMethod") == "POST"
+            assert b"filename" in base64.b64decode((self.extract_sent_payload("body")))
             assert response.status_code == 200
             assert (
                 response.content
@@ -50,6 +58,9 @@ class TestLambda(PatcherBase):
             kwargs = {"files": {"file": test_buffer}}
             response = self.post("/file", **kwargs)
             assert response.status_code == 200
+            assert self.extract_sent_payload("path") == "/file"
+            assert self.extract_sent_payload("httpMethod") == "POST"
+            assert "filename" in (self.extract_sent_payload("body"))
             assert (
                 response.content
                 == b"\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae\xe2\x98\xa0\xf0\x9f\x90\xae"  # noqa: E501
@@ -60,6 +71,8 @@ class TestLambda(PatcherBase):
             b'{"body": "ewogICJmb3JtIjoge30sIAogICJoZWFkZXJzIjogIlVzZXItQWdlbnQ6IHB5dGhvbi1yZXF1ZXN0cy8yLjI1LjFcclxuQWNjZXB0LUVuY29kaW5nOiBnemlwLCBkZWZsYXRlXHJcbkFjY2VwdDogKi8qXHJcbkNvbm5lY3Rpb246IGtlZXAtYWxpdmVcclxuXHJcbiIsIAogICJwYXJhbSI6ICJmb28iLCAKICAicXVlcnlfc3RyaW5ncyI6IHt9Cn0K", "isBase64Encoded": "true", "statusCode": 200, "headers": {"Content-Type": "application/json", "X-Request-ID": "", "Content-Length": "195"}}'  # noqa: E501
         )
         response = self.get("/test/foo")
+        assert self.extract_sent_payload("path") == "/test/foo"
+        assert self.extract_sent_payload("httpMethod") == "GET"
         assert response.status_code == 200
         assert response.json()["param"] == "foo"
 
@@ -67,9 +80,11 @@ class TestLambda(PatcherBase):
         self.set_response_payload(
             b'{"body": "ewogICJmb3JtIjogewogICAgImZvbyI6ICJiYXIiCiAgfSwgCiAgImhlYWRlcnMiOiAiQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi94LXd3dy1mb3JtLXVybGVuY29kZWRcclxuQ29udGVudC1MZW5ndGg6IDdcclxuVXNlci1BZ2VudDogcHl0aG9uLXJlcXVlc3RzLzIuMjUuMVxyXG5BY2NlcHQtRW5jb2Rpbmc6IGd6aXAsIGRlZmxhdGVcclxuQWNjZXB0OiAqLypcclxuQ29ubmVjdGlvbjoga2VlcC1hbGl2ZVxyXG5cclxuIiwgCiAgInBhcmFtIjogImZvcm0iLCAKICAicXVlcnlfc3RyaW5ncyI6IHt9Cn0K", "isBase64Encoded": "true", "statusCode": 200, "headers": {"Content-Type": "application/json", "X-Request-ID": "", "Content-Length": "288"}}'  # noqa: E501
         )
-        response = self.get("/test/foo")
         form_data = {"foo": "bar"}
         response = self.post("/test/form", data=form_data)
+        assert self.extract_sent_payload("path") == "/test/form"
+        assert self.extract_sent_payload("httpMethod") == "POST"
+        assert self.extract_sent_payload("body") == "foo=bar"
         assert response.status_code == 200
         assert response.json()["form"] == form_data
 
@@ -79,7 +94,9 @@ class TestLambda(PatcherBase):
         )
         param_data = {"foo": "bar"}
         response = self.get("/test/form", params=param_data)
-
+        assert self.extract_sent_payload("path") == "/test/form"
+        assert self.extract_sent_payload("httpMethod") == "GET"
+        assert self.extract_sent_payload("queryStringParameters") == param_data
         assert response.status_code == 200
         assert response.json()["query_strings"] == param_data
 
@@ -89,7 +106,9 @@ class TestLambda(PatcherBase):
         )
         header_data = {"foo": "bar"}
         response = self.get("/test/form", headers=header_data)
-
+        assert self.extract_sent_payload("path") == "/test/form"
+        assert self.extract_sent_payload("httpMethod") == "GET"
+        assert self.extract_sent_payload("headers")["foo"] == "bar"
         assert response.status_code == 200
         assert response.json()["headers"].lower().find("foo") > 0
         assert response.json()["headers"].lower().find("bar") > 0
