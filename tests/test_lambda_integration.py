@@ -2,7 +2,7 @@ from io import BytesIO, StringIO
 
 import requests
 
-from lambda_requests import LambdaAdapter
+import lambda_requests
 from tests.base import (
     BINARY_PAYLOAD,
     HTTP_URL_PREFIX,
@@ -22,8 +22,7 @@ def _seek_reset_request(accessor, url_path, *args, **kwargs):
 class TestLambdaIntegration(PatcherBase):
     def setUp(self):
         self.http_accessor = requests.Session()
-        self.lambda_accessor = requests.Session()
-        self.lambda_accessor.mount("httplambda://", LambdaAdapter(region="us-west-2"))
+        self.lambda_accessor = lambda_requests.Session()
 
     def post_both(self, url_path, *args, **kwargs):
         return (
