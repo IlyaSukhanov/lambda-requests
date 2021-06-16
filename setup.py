@@ -30,6 +30,7 @@ setup(
             "bandit",
             "black~=21.5b1",
             "isort",
+            "wheel",
             "twine",
         ],
     },
