@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="lambda_requests",
-    version="0.1.1",
+    version="0.9",
     description="Use Requests to invoke AWS Lambdas",
     author="Ilya Sukhanov",
     author_email="ilya@sukhanov.net",
@@ -30,6 +30,7 @@ setup(
             "bandit",
             "black~=21.5b1",
             "isort",
+            "twine",
         ],
     },
     license="MIT license",
