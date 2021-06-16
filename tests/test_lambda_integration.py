@@ -1,17 +1,15 @@
-from io import (
-    BytesIO,
-    StringIO,
-)
+from io import BytesIO, StringIO
 
-from unittest import TestCase
 import requests
 
 from lambda_requests import LambdaAdapter
-
-LAMBDA_URL_PREFIX = "httplambda://flaskexp-test"
-HTTP_URL_PREFIX = "https://qrq3869e2e.execute-api.us-west-2.amazonaws.com/test/"
-BINARY_PAYLOAD = bytes([0xde, 0xad, 0xbe, 0xef] * 100)
-UNICODE_PAYLOAD = u"\u2620\U0001F42E" * 100
+from tests.base import (
+    BINARY_PAYLOAD,
+    HTTP_URL_PREFIX,
+    LAMBDA_URL_PREFIX,
+    UNICODE_PAYLOAD,
+    PatcherBase,
+)
 
 
 def _seek_reset_request(accessor, url_path, *args, **kwargs):
@@ -21,23 +19,30 @@ def _seek_reset_request(accessor, url_path, *args, **kwargs):
     return accessor(url_path, *args, **kwargs)
 
 
-class TestLambdaIntegration(TestCase):
-
+class TestLambdaIntegration(PatcherBase):
     def setUp(self):
         self.http_accessor = requests.Session()
         self.lambda_accessor = requests.Session()
-        self.lambda_accessor.mount("httplambda://", LambdaAdapter())
+        self.lambda_accessor.mount("httplambda://", LambdaAdapter(region="us-west-2"))
 
     def post_both(self, url_path, *args, **kwargs):
         return (
-            _seek_reset_request(self.http_accessor.post, HTTP_URL_PREFIX + url_path, *args, **kwargs),
-            _seek_reset_request(self.lambda_accessor.post, LAMBDA_URL_PREFIX + url_path, *args, **kwargs),
+            _seek_reset_request(
+                self.http_accessor.post, HTTP_URL_PREFIX + url_path, *args, **kwargs
+            ),
+            _seek_reset_request(
+                self.lambda_accessor.post, LAMBDA_URL_PREFIX + url_path, *args, **kwargs
+            ),
         )
 
     def get_both(self, url_path, *args, **kwargs):
         return (
-            _seek_reset_request(self.lambda_accessor.get, LAMBDA_URL_PREFIX + url_path, *args, **kwargs),
-            _seek_reset_request(self.http_accessor.get, HTTP_URL_PREFIX + url_path, *args, **kwargs),
+            _seek_reset_request(
+                self.lambda_accessor.get, LAMBDA_URL_PREFIX + url_path, *args, **kwargs
+            ),
+            _seek_reset_request(
+                self.http_accessor.get, HTTP_URL_PREFIX + url_path, *args, **kwargs
+            ),
         )
 
     def test_binary_file(self):
@@ -81,7 +86,9 @@ class TestLambdaIntegration(TestCase):
         responses = self.get_both("/test/form", params=param_data)
 
         assert responses[0].status_code == responses[1].status_code == 200
-        assert responses[0].json()["query_strings"] == responses[1].json()["query_strings"]
+        assert (
+            responses[0].json()["query_strings"] == responses[1].json()["query_strings"]
+        )
 
     def test_custom_header(self):
         header_data = {"foo": "bar"}

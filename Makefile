@@ -28,6 +28,16 @@ help:
 
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
+format: ## auto format all code
+	isort lambda_requests tests setup.py
+	black lambda_requests tests setup.py
+
+isort: ## check imports with isort
+	isort -c lambda_requests tests setup.py
+
+black: ## check formatting with black
+	black --check lambda_requests tests setup.py
+
 clean-build: ## remove build artifacts
 	rm -fr build/
 	rm -fr dist/
@@ -49,30 +59,23 @@ clean-test: ## remove test and coverage artifacts
 lint: ## check style with flake8
 	flake8 lambda_requests tests
 
-test: ## run tests quickly with the default Python
-	py.test tests --cov=lambda_requests --cov-fail-under=100
+test-security:
+	bandit -r . -x ./tests
 
-test-all: ## run tests on every Python version with tox
-	tox
+test: ## run tests quickly with the default Python
+	py.test tests --ignore tests/test_lambda_integration.py --cov=lambda_requests --cov-fail-under=100
+
+test-all: isort black lint test-security test
+
+integration-test: ## run tests quickly with the default Python
+	py.test tests --cov=lambda_requests --cov-fail-under=100
 
 coverage: ## check code coverage quickly with the default Python
 	coverage run --source lambda_requests -m pytest
 	coverage report -m
 
-release: clean ## package and upload a release
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
-
-dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
-	ls -l dist
-
 install: clean ## install the package to the active Python's site-packages
-	pip install -r requirements.txt -r requirements_dev.txt
-	python setup.py install
-run:
-	env LAMBDA_REQUESTS_LOG_LEVEL=DEBUG FLASK_APP=bin/run.py flask run
+	pip install . --upgrade
 
-update-dependencies:
-	pip install -e . -r requirements.txt -r requirements_dev.txt --upgrade
+install-dev: clean
+	pip install -e '.[testing]' --upgrade
