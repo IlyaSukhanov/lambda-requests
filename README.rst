@@ -18,7 +18,7 @@ Installation
 
 .. code-block:: shell
 
-    pip intall lambda_requests
+    pip intall lambda-requests
 
 Usage
 `````
