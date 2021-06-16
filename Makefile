@@ -74,18 +74,8 @@ coverage: ## check code coverage quickly with the default Python
 	coverage run --source lambda_requests -m pytest
 	coverage report -m
 
-release: clean ## package and upload a release
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
-
-dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
-	ls -l dist
-
 install: clean ## install the package to the active Python's site-packages
-	pip install -r requirements.txt -r requirements_dev.txt
-	python setup.py install
+	pip install . --upgrade
 
-update-dependencies:
-	pip install -e . -r requirements.txt -r requirements_dev.txt --upgrade
+install-dev: clean
+	pip install -e '.[testing]' --upgrade
