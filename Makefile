@@ -79,3 +79,7 @@ install: clean ## install the package to the active Python's site-packages
 
 install-dev: clean
 	pip install -e '.[testing]' --upgrade
+
+publish:
+	python setup.py sdist bdist_wheel
+	twine upload dist/*
