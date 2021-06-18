@@ -1,10 +1,12 @@
 import base64
 import json
+from datetime import datetime
 from io import BytesIO, StringIO
 
 import requests
 
 import lambda_requests
+from lambda_requests.lambda_request import _JSONEncoder
 from tests.base import (
     BINARY_PAYLOAD,
     LAMBDA_URL_PREFIX,
@@ -104,6 +106,24 @@ class TestLambda(PatcherBase):
             b'{"body": "ewogICJmb3JtIjoge30sIAogICJoZWFkZXJzIjogIlVzZXItQWdlbnQ6IHB5dGhvbi1yZXF1ZXN0cy8yLjI1LjFcclxuQWNjZXB0LUVuY29kaW5nOiBnemlwLCBkZWZsYXRlXHJcbkFjY2VwdDogKi8qXHJcbkNvbm5lY3Rpb246IGtlZXAtYWxpdmVcclxuRm9vOiBiYXJcclxuXHJcbiIsIAogICJwYXJhbSI6ICJmb3JtIiwgCiAgInF1ZXJ5X3N0cmluZ3MiOiB7fQp9Cg==", "isBase64Encoded": "true", "statusCode": 200, "headers": {"Content-Type": "application/json", "X-Request-ID": "", "Content-Length": "208"}}'  # noqa: E501
         )
         header_data = {"foo": "bar"}
+        response = self.get("/test/form", headers=header_data)
+        assert self.extract_sent_payload("path") == "/test/form"
+        assert self.extract_sent_payload("httpMethod") == "GET"
+        assert self.extract_sent_payload("headers")["foo"] == "bar"
+        assert response.status_code == 200
+        assert response.json()["headers"].lower().find("foo") > 0
+        assert response.json()["headers"].lower().find("bar") > 0
+
+    def test_json_serialize_fallthrough(self):
+        json.dumps({"foo": "bar"}, cls=_JSONEncoder)
+        with self.assertRaises(TypeError):
+            json.dumps({"foo": datetime.fromisoformat("2021-06-19")}, cls=_JSONEncoder)
+
+    def test_custom_header_byte_string(self):
+        self.set_response_payload(
+            b'{"body": "ewogICJmb3JtIjoge30sIAogICJoZWFkZXJzIjogIlVzZXItQWdlbnQ6IHB5dGhvbi1yZXF1ZXN0cy8yLjI1LjFcclxuQWNjZXB0LUVuY29kaW5nOiBnemlwLCBkZWZsYXRlXHJcbkFjY2VwdDogKi8qXHJcbkNvbm5lY3Rpb246IGtlZXAtYWxpdmVcclxuRm9vOiBiYXJcclxuXHJcbiIsIAogICJwYXJhbSI6ICJmb3JtIiwgCiAgInF1ZXJ5X3N0cmluZ3MiOiB7fQp9Cg==", "isBase64Encoded": "true", "statusCode": 200, "headers": {"Content-Type": "application/json", "X-Request-ID": "", "Content-Length": "208"}}'  # noqa: E501
+        )
+        header_data = {"foo": b"bar"}
         response = self.get("/test/form", headers=header_data)
         assert self.extract_sent_payload("path") == "/test/form"
         assert self.extract_sent_payload("httpMethod") == "GET"

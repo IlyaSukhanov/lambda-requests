@@ -26,8 +26,8 @@ Usage
 .. code-block:: python
 
     >>> import lambda_requests
-    >>> la = lambda_requests.Session()
-    >>> la.get("http+lambda://flaskexp-test/test/foo")
+    >>> lr = lambda_requests.Session()
+    >>> lr.get("http+lambda://flaskexp-test/test/foo")
     <Response [200]>
 
 In short, start a lambda_requests.Session() and then access you lambdas by
@@ -97,3 +97,12 @@ to `lambda invoke`_ compatible with AWS API Gateway simple proxy format.
 
 .. _`transport adapter`: http://docs.python-requests.org/en/master/user/advanced/#transport-adapters
 .. _`lambda invoke`: http://boto3.readthedocs.io/en/latest/reference/services/lambda.html#Lambda.Client.invoke
+
+Limitations
+-----------
+
+Following functionality has not been tested and is likely to not be functional:
+
+* Cookies
+* Basicauth
+

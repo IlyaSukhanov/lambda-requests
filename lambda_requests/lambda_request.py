@@ -7,18 +7,28 @@ from urllib.parse import parse_qs, urlparse
 
 import boto3
 import requests
-from requests.adapters import BaseAdapter, Response
+from requests.adapters import BaseAdapter
+from requests.models import Response
+from requests.utils import get_encoding_from_headers
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_SCHEME = "http+lambda://"
 
 
+class _JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, bytes):
+            return obj.decode()
+        # We should not fall through as Requests type checks headers for str/bytes
+        return json.JSONEncoder.default(self, obj)
+
+
 def _lambda_query_string(url):
     return {key: value[0] for key, value in parse_qs(urlparse(url).query).items()}
 
 
-def decode_payload(lambda_response, field):
+def _decode_payload(lambda_response, field):
     if lambda_response.get("isBase64Encoded", False):
         return BytesIO(base64.b64decode(lambda_response[field]))
     else:
@@ -74,10 +84,11 @@ class LambdaAdapter(BaseAdapter):
         response = Response()
         response.status_code = lambda_response.get("statusCode", 502)
         response.headers = lambda_response.get("headers", {})
+        response.encoding = get_encoding_from_headers(response.headers)
         if "body" in lambda_response:
-            response.raw = decode_payload(lambda_response, "body")
+            response.raw = _decode_payload(lambda_response, "body")
         elif "errorMessage" in lambda_response:
-            response.raw = decode_payload(lambda_response, "errorMessage")
+            response.raw = _decode_payload(lambda_response, "errorMessage")
         return response
 
     def send(self, request, **kwargs):
@@ -85,7 +96,7 @@ class LambdaAdapter(BaseAdapter):
         invocation_type = "RequestResponse"
         log_type = "Tail"
         raw_payload = self._lambda_encode_request(request)
-        json_payload = json.dumps(raw_payload)
+        json_payload = json.dumps(raw_payload, cls=_JSONEncoder)
         logger.debug("Payload: %s", json_payload)
 
         client = boto3.client("lambda", region_name=self.region)
