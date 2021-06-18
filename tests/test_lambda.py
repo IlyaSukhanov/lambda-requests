@@ -4,7 +4,7 @@ from io import BytesIO, StringIO
 
 import requests
 
-from lambda_requests import LambdaAdapter
+import lambda_requests
 from tests.base import (
     BINARY_PAYLOAD,
     LAMBDA_URL_PREFIX,
@@ -16,8 +16,7 @@ from tests.base import (
 class TestLambda(PatcherBase):
     def setUp(self):
         self.http_accessor = requests.Session()
-        self.lambda_accessor = requests.Session()
-        self.lambda_accessor.mount("httplambda://", LambdaAdapter())
+        self.lambda_accessor = lambda_requests.Session()
         self.boto3 = self.add_patcher("lambda_requests.lambda_request.boto3")
 
     def extract_sent_payload(self, key):

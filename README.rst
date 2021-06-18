@@ -25,16 +25,15 @@ Usage
 
 .. code-block:: python
 
-    >>> import requests
-    >>> from lambda_requests import LambdaAdapter
-    >>> la = requests.Session()
-    >>> la.mount("httplambda://", LambdaAdapter())
-    >>> la.get("httplambda://flaskexp-test/test/foo")
+    >>> import lambda_requests
+    >>> la = lambda_requests.Session()
+    >>> la.get("http+lambda://flaskexp-test/test/foo")
     <Response [200]>
 
-In short mount `LambdaAdapter` to requests session then access your lambdas by
-using url of this format `httplambda://{name-of-lambda-function}/...` then use
-`requests`_ as you normally would; get, post, query strings, form data ... etc.
+In short, start a lambda_requests.Session() and then access you lambdas by
+passing `http+lambda://{name-of-lambda-function}/...` as the uri to the common
+`requests`_  methods such as `get`, `post` and the usual parameters such as query
+strings, form data and so on.
 
 Lambda authorization is configured via `boto3`_, and can be set up using
 `environment variables`_ or a `configuration file`_. Configuration file is
@@ -48,7 +47,7 @@ recommended. Example credential file ~/.aws/credentials:
 
 Similar to authorization, region can be configured either via the `environment
 variable`_ `AWS_DEFAULT_REGION`, `configuration file`_. Region can also be set
-on initialization of LambdaAdapter(region:'us-west-2'). Example configuration
+on initialization of `Session(region="us-west-2")`. Example configuration
 file ~/.aws/config:
 
 .. code-block:: ini

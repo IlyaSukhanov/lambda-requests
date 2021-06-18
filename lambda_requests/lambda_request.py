@@ -6,9 +6,12 @@ from io import BytesIO
 from urllib.parse import parse_qs, urlparse
 
 import boto3
+import requests
 from requests.adapters import BaseAdapter, Response
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_SCHEME = "http+lambda://"
 
 
 def _lambda_query_string(url):
@@ -20,6 +23,12 @@ def decode_payload(lambda_response, field):
         return BytesIO(base64.b64decode(lambda_response[field]))
     else:
         return BytesIO(lambda_response[field].encode("utf-8"))
+
+
+class Session(requests.Session):
+    def __init__(self, url_scheme=None, region=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.mount(url_scheme or DEFAULT_SCHEME, LambdaAdapter(region=region))
 
 
 class LambdaAdapter(BaseAdapter):
