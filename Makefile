@@ -63,16 +63,12 @@ test-security:
 	bandit -r . -x ./tests
 
 test: ## run tests quickly with the default Python
-	py.test tests --ignore tests/test_lambda_integration.py --cov=lambda_requests --cov-fail-under=100
+	py.test tests --ignore tests/test_lambda_integration.py --cov=lambda_requests --cov-fail-under=100 --cov-report term-missing
 
 test-all: isort black lint test-security test
 
 integration-test: ## run tests quickly with the default Python
 	py.test tests --cov=lambda_requests --cov-fail-under=100
-
-coverage: ## check code coverage quickly with the default Python
-	coverage run --source lambda_requests -m pytest
-	coverage report -m
 
 install: clean ## install the package to the active Python's site-packages
 	pip install . --upgrade
