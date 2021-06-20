@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="lambda_requests",
-    version="1.2",
+    version="1.3",
     description="Use Requests to invoke AWS Lambdas",
     long_description=open("README.rst").read().strip(),
     author="Ilya Sukhanov",

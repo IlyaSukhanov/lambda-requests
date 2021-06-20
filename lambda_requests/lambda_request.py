@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import os
+from http import HTTPStatus
 from io import BytesIO
 from urllib.parse import parse_qs, urlparse
 
@@ -14,6 +15,7 @@ from requests.utils import get_encoding_from_headers
 logger = logging.getLogger(__name__)
 
 DEFAULT_SCHEME = "http+lambda://"
+STATUS_CODES_TO_REASON_PHRASES = {status.value: status.name for status in HTTPStatus}
 
 
 class _JSONEncoder(json.JSONEncoder):
@@ -83,6 +85,7 @@ class LambdaAdapter(BaseAdapter):
         """
         response = Response()
         response.status_code = lambda_response.get("statusCode", 502)
+        response.reason = STATUS_CODES_TO_REASON_PHRASES[response.status_code]
         response.headers = lambda_response.get("headers", {})
         response.encoding = get_encoding_from_headers(response.headers)
         if "body" in lambda_response:

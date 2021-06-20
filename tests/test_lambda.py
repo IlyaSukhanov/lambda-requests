@@ -45,6 +45,7 @@ class TestLambda(PatcherBase):
             assert self.extract_sent_payload("httpMethod") == "POST"
             assert b"filename" in base64.b64decode((self.extract_sent_payload("body")))
             assert response.status_code == 200
+            assert response.reason == "OK"
             assert (
                 response.content
                 == b"\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef\xde\xad\xbe\xef"  # noqa: E501
@@ -59,6 +60,7 @@ class TestLambda(PatcherBase):
             kwargs = {"files": {"file": test_buffer}}
             response = self.post("/file", **kwargs)
             assert response.status_code == 200
+            assert response.reason == "OK"
             assert self.extract_sent_payload("path") == "/file"
             assert self.extract_sent_payload("httpMethod") == "POST"
             assert "filename" in (self.extract_sent_payload("body"))
@@ -75,6 +77,7 @@ class TestLambda(PatcherBase):
         assert self.extract_sent_payload("path") == "/test/foo"
         assert self.extract_sent_payload("httpMethod") == "GET"
         assert response.status_code == 200
+        assert response.reason == "OK"
         assert response.json()["param"] == "foo"
 
     def test_form_object(self):
@@ -87,6 +90,7 @@ class TestLambda(PatcherBase):
         assert self.extract_sent_payload("httpMethod") == "POST"
         assert self.extract_sent_payload("body") == "foo=bar"
         assert response.status_code == 200
+        assert response.reason == "OK"
         assert response.json()["form"] == form_data
 
     def test_query_string(self):
@@ -99,6 +103,7 @@ class TestLambda(PatcherBase):
         assert self.extract_sent_payload("httpMethod") == "GET"
         assert self.extract_sent_payload("queryStringParameters") == param_data
         assert response.status_code == 200
+        assert response.reason == "OK"
         assert response.json()["query_strings"] == param_data
 
     def test_custom_header(self):
@@ -111,6 +116,7 @@ class TestLambda(PatcherBase):
         assert self.extract_sent_payload("httpMethod") == "GET"
         assert self.extract_sent_payload("headers")["foo"] == "bar"
         assert response.status_code == 200
+        assert response.reason == "OK"
         assert response.json()["headers"].lower().find("foo") > 0
         assert response.json()["headers"].lower().find("bar") > 0
 
@@ -129,6 +135,7 @@ class TestLambda(PatcherBase):
         assert self.extract_sent_payload("httpMethod") == "GET"
         assert self.extract_sent_payload("headers")["foo"] == "bar"
         assert response.status_code == 200
+        assert response.reason == "OK"
         assert response.json()["headers"].lower().find("foo") > 0
         assert response.json()["headers"].lower().find("bar") > 0
 
@@ -138,6 +145,7 @@ class TestLambda(PatcherBase):
         )
         response = self.get("/lambda_exception")
         assert response.status_code == 502
+        assert response.reason == "BAD_GATEWAY"
         assert (
             response.content
             == b"Unable to import module 'service': No module named 'foobarbaz'"
