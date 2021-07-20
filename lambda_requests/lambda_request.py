@@ -68,6 +68,7 @@ class LambdaAdapter(BaseAdapter):
             )
             base64_encoded = True
         return {
+            "resource": urlparse(request.path_url).path,
             "httpMethod": request.method,
             "path": urlparse(request.path_url).path,
             "pathParameters": "",
