@@ -3,10 +3,9 @@ import json
 from datetime import datetime
 from io import BytesIO, StringIO
 
-import requests
+from lambda_invoke.simple_proxy import _JSONEncoder
 
 import lambda_requests
-from lambda_requests.lambda_request import _JSONEncoder
 from tests.base import (
     BINARY_PAYLOAD,
     LAMBDA_URL_PREFIX,
@@ -17,9 +16,8 @@ from tests.base import (
 
 class TestLambda(PatcherBase):
     def setUp(self):
-        self.http_accessor = requests.Session()
-        self.lambda_accessor = lambda_requests.Session()
         self.boto3 = self.add_patcher("lambda_requests.lambda_request.boto3")
+        self.lambda_accessor = lambda_requests.Session()
 
     def extract_sent_payload(self, key):
         return json.loads(self.boto3.client().invoke.call_args[1]["Payload"])[key]
@@ -150,3 +148,18 @@ class TestLambda(PatcherBase):
             response.content
             == b"Unable to import module 'service': No module named 'foobarbaz'"
         )
+
+    def test_200_ok(self):
+        self.set_response_payload(
+            b'{"body": "ewogICJzdGF0dXMiOiAiVVAiCn0K", "isBase64Encoded": "true", "statusCode": 200, "headers": {"Content-Type": "application/json", "X-Request-ID": "", "Content-Length": "21"}}'  # noqa: E501
+        )
+        response = self.get("/health")
+        assert response.status_code == 200
+
+    def test_context_managed(self):
+        self.set_response_payload(
+            b'{"body": "ewogICJzdGF0dXMiOiAiVVAiCn0K", "isBase64Encoded": "true", "statusCode": 200, "headers": {"Content-Type": "application/json", "X-Request-ID": "", "Content-Length": "21"}}'  # noqa: E501
+        )
+        with lambda_requests.Session() as session:
+            response = session.get("http+lambda://flaskexp-test/test/foo")
+            assert response.status_code == 200

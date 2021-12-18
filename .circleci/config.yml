@@ -14,7 +14,7 @@ jobs:
             make install-dev
       - save_cache:
           name: Save python deps cache
-          key: deps-{{ .Branch }}-{{ checksum "setup.py" }}
+          key: deps-{{ .Branch }}-{{ checksum "setup.cfg" }}
           paths:
           - ~/venv
       - run:
@@ -26,7 +26,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps-{{ .Branch }}-{{ checksum "setup.py" }}
+          key: deps-{{ .Branch }}-{{ checksum "setup.cfg" }}
       - run:
           name: init .pypirc
           command: |
@@ -46,4 +46,4 @@ workflows:
             - test
           filters:
             branches:
-              only: master
+              only: main

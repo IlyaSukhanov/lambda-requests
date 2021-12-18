@@ -29,14 +29,14 @@ help:
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
 format: ## auto format all code
-	isort lambda_requests tests setup.py
-	black lambda_requests tests setup.py
+	isort lambda_requests tests
+	black lambda_requests tests
 
 isort: ## check imports with isort
-	isort -c lambda_requests tests setup.py
+	isort -c lambda_requests tests
 
 black: ## check formatting with black
-	black --check lambda_requests tests setup.py
+	black --check lambda_requests tests
 
 clean-build: ## remove build artifacts
 	rm -fr build/
@@ -77,5 +77,6 @@ install-dev: clean
 	pip install -e '.[testing]' --upgrade
 
 publish:
-	python setup.py sdist bdist_wheel
+	python -m build
+	twine check dist/*
 	twine upload dist/*
