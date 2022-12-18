@@ -46,7 +46,7 @@ class LambdaAdapter(BaseAdapter):
     def lambda_client(self):
         if not self._lambda_client:
             self._lambda_client = boto3.client("lambda",
-                                               region_name=self.region
+                                               region_name=self.region,
                                                endpoint_url=self.endpoint_url)
         return self._lambda_client
 
