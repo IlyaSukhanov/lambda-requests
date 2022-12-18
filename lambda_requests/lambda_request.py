@@ -32,6 +32,7 @@ class Session(requests.Session):
 class LambdaAdapter(BaseAdapter):
     def __init__(self, region=None):
         self.region = region or os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+        self.endpoint_url = region or os.environ.get("AWS_LAMBDA_ENDPOINT_URL", None)
         self._lambda_client = None
         super(LambdaAdapter, self).__init__()
 
@@ -44,7 +45,9 @@ class LambdaAdapter(BaseAdapter):
     @property
     def lambda_client(self):
         if not self._lambda_client:
-            self._lambda_client = boto3.client("lambda", region_name=self.region)
+            self._lambda_client = boto3.client("lambda",
+                                               region_name=self.region,
+                                               endpoint_url=self.endpoint_url)
         return self._lambda_client
 
     def send(self, request, **kwargs):
